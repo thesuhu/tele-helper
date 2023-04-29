@@ -1,0 +1,6 @@
+python-dotenv
+python-telegram-bot==13.9
+python-dotenv
+python-whois
+unshortenit
+tldextract
