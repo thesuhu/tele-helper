@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 from telegram.ext import CommandHandler, Updater
-
 import logging
 import datetime
 from bot import handle_start_command, handle_ip_command, handle_password_command, handle_help_command
