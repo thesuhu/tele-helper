@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from telegram.ext import CommandHandler, Updater
 import logging
 import datetime
-from bot import handle_start_command, handle_ip_command, handle_password_command, handle_help_command
+from bot import handle_start_command, handle_profile_command, handle_password_command, handle_help_command, handle_server_command
 
 # Load environment variables from .env file
 load_dotenv()
@@ -14,7 +14,7 @@ log_file_path = os.getenv('LOG_FILE_PATH')
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.ERROR,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler(log_file_path),
@@ -35,10 +35,13 @@ def main():
     bot.add_handler(CommandHandler("start", handle_start_command))
     # help handler
     bot.add_handler(CommandHandler("help", handle_help_command))
-    # menambahkan handler untuk perintah /ip
-    bot.add_handler(CommandHandler("ip", handle_ip_command))
+    # ger profile user
+    bot.add_handler(CommandHandler("profile", handle_profile_command))
     # passwor generator
     bot.add_handler(CommandHandler('password', handle_password_command))
+    # info server
+    bot.add_handler(CommandHandler('server', handle_server_command))
+
 
     # start bot
     updater.start_polling()

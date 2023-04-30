@@ -1,4 +1,7 @@
 import logging
+import os
+from dotenv import load_dotenv
+import requests
 from telegram import ParseMode
 
 from scripts.myip import what_my_ip
@@ -9,6 +12,14 @@ from scripts.password import password_generator
 logger = logging.getLogger(__name__)
 # Dengan begitu, kita bisa membedakan log dari bot.py dengan log dari module lain jika ada.
 
+# Load environment variables from .env file
+load_dotenv()
+
+authorized_users_str = os.getenv('INIT_AUTHORIZED_USERS')
+authorized_users_list = authorized_users_str.split(',')
+
+def get_authorized_users_list():
+    return authorized_users_list
 
 def handle_start_command(update, context):
     try:
@@ -30,13 +41,17 @@ def handle_help_command(update, context):
         help_message = """
 ℹ️ *Available commands:*
 /start \- Start the bot
-/ip \- Get your public IP address
+/profile \- Get your user profile information
 /password \- Generate a secure password
+/server \- Get server information \(admin only\)
 
 ℹ️ *How to use:*
 /start \- To start the bot and get the available commands
-/ip \- To get your public IP address and location on Google Maps
+/profile \- To get your user profile information
 /password \- To generate a secure password, you can specify the length of the password by typing /password \<length\>
+/server \- To get server information \(admin only\)
+
+Note: Some commands may not be available depending on your access level\.
         """
         context.bot.send_message(chat_id=update.message.chat_id,
                                  text=help_message, parse_mode=ParseMode.MARKDOWN_V2)
@@ -44,34 +59,82 @@ def handle_help_command(update, context):
         error_message = "An error occurred while handling /help command"
         logger.exception(error_message)
         context.bot.send_message(chat_id=update.message.chat_id,
-                                 text="Sorry, something went wrong. Please try again later.")
+                                 text="Sorry, something went wrong. Please try again later. 😞")
 
 
-def handle_ip_command(update, context):
+def handle_server_command(update, context):
     try:
-        # mendapatkan informasi lengkap tentang alamat IP publik pengguna
-        ip_info = what_my_ip()
-        lat = ip_info['loc'].split(',')[0]
-        long = ip_info['loc'].split(',')[1]
-        maps_url = f"https://www.google.com/maps/search/?api=1&query={lat},{long}"
+        # validasi pengguna
+        authorized_users_list = get_authorized_users_list()
+        if str(update.message.chat_id) not in authorized_users_list:
+                context.bot.send_message(chat_id=update.message.chat_id,
+                                        text="⚠️ Sorry, only authorized users are allowed to use this command.")
+        else:
+            # mendapatkan ip server
+            ip_info = what_my_ip()
+            lat = ip_info['loc'].split(',')[0]
+            long = ip_info['loc'].split(',')[1]
+            maps_url = f"https://www.google.com/maps/search/?api=1&query={lat},{long}"
 
-        message = f"🌐 IP Address: {ip_info['ip']}\n"
-        message += f"🔍 ISP: {ip_info['org']}\n"
-        message += f"🏙️ City: {ip_info['city']}\n"
-        message += f"🌍 Region: {ip_info['region']}\n"
-        message += f"🗺️ Country: {ip_info['country']}\n"
-        message += f"🌞 Latitude: {lat}\n"
-        message += f"🌜 Longitude: {long}"
-        message += f"\n\n🌐 View on <a href='{maps_url}'>Google Maps</a>"
+            message = "🖥️ Here's some information about your server:\n\n"
+            message += f"🌐 IP Address: {ip_info['ip']}\n"
+            message += f"🔍 ISP: {ip_info['org']}\n"
+            message += f"🏙️ City: {ip_info['city']}\n"
+            message += f"🌍 Region: {ip_info['region']}\n"
+            message += f"🗺️ Country: {ip_info['country']}\n"
+            message += f"🌞 Latitude: {lat}\n"
+            message += f"🌜 Longitude: {long}"
+            message += f"\n\n🌐 View on <a href='{maps_url}'>Google Maps</a>"
 
-        # update.message.reply_html(message)
-        context.bot.send_message(chat_id=update.message.chat_id,
-                                 text=message, parse_mode=ParseMode.HTML)
-
+            # update.message.reply_html(message)
+            context.bot.send_message(chat_id=update.message.chat_id,
+                                    text=message, parse_mode=ParseMode.HTML)
     except Exception as e:
-        logger.exception("Error handling /ip command")
+        logger.exception("Error handling /server command")
         context.bot.send_message(chat_id=update.message.chat_id,
                                  text="An error occurred. Please try again later.")
+
+
+def handle_profile_command(update, context):
+    try:
+        # Get sender's profile information
+        chat_id = update.message.chat_id
+        # message_id = update.message.message_id
+        bot_token = context.bot.token
+
+        # Create URL to retrieve user's profile information
+        url = f"https://api.telegram.org/bot{bot_token}/getChat?chat_id={chat_id}"
+
+        # Send GET request to Telegram Bot API with chat_id parameter
+        response = requests.get(url)
+
+        # Convert response to JSON format
+        data = response.json()
+
+        # Check if the response is successful
+        if data["ok"]:
+            # Create an interesting text from user's profile information
+            user_profile = f"🧑 Here's some information about your profile:\n\n"
+            user_profile += f"🆔 ID: {data['result']['id']}\n"
+            user_profile += f"👤 First Name: {data['result']['first_name']}\n"
+            user_profile += f"👥 Last Name: {data['result']['last_name']}\n"
+            user_profile += f"🆔 Username: @{data['result']['username']}\n"
+            user_profile += f"👤 User Type: {data['result']['type']}\n"
+            user_profile += f"📝 Bio: {data['result']['bio']}\n"
+            user_profile += f"📷 Profile Photo: <a href='tg://user?id={data['result']['id']}' target='_blank'>View</a>\n"
+
+            # Send the created text to the user
+            context.bot.send_message(
+                chat_id=chat_id, text=user_profile, parse_mode="HTML")
+        else:
+            # If the response is not successful, send an error message to the user
+            context.bot.send_message(
+                chat_id=chat_id, text="Sorry, there was an error retrieving user profile. Please try again later.")
+    except Exception as e:
+        # If there is an error, log the error and send an error message to the user
+        logger.exception("Error getting user profile")
+        context.bot.send_message(
+            chat_id=chat_id, text="Sorry, there was an error retrieving user profile. Please try again later. 😔")
 
 
 def handle_password_command(update, context):
