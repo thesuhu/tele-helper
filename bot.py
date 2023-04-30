@@ -153,9 +153,9 @@ def handle_password_command(update, context):
         password = password_generator(length)
 
         # send the generated password to the user
-        message = "🔒 Here's your new password:\n\n"
-        message += f"{password}\n\n"
-        message += "Please make sure to use a unique and secure password."
+        message += "🔒 Please make sure to use a unique and secure password."
+        message = "Here's your new password:\n\n"
+        message += f"{password}"
         context.bot.send_message(
             chat_id=update.message.chat_id, text=message, disable_web_page_preview=True)
 
