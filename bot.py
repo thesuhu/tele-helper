@@ -1,12 +1,14 @@
 import logging
 import os
 from dotenv import load_dotenv
+import emoji
 import requests
 from telegram import ParseMode
 
 from scripts.myip import what_my_ip
 from scripts.password import password_generator
 from scripts.unshorten import unshorten_url
+from scripts.whois_lookup import print_whois
 
 # create logger
 # agar log yang ditulis ke bot.log memiliki nama logger yang sesuai dengan nama module/filename yang sedang dijalankan
@@ -55,6 +57,7 @@ Below is a list of available commands that are grouped by category\. Please use 
 🔍 *OSINT*
 
 /unshort \- Unshorten a shortened URL
+/whois \- Get WHOIS information about a domain
 
 👑 *Admin*
 
@@ -95,8 +98,8 @@ def handle_server_command(update, context):
             message += f"🌐 IP Address: {ip_info['ip']}\n"
             message += f"🔍 ISP: {ip_info['org']}\n"
             message += f"🏙️ City: {ip_info['city']}\n"
-            message += f"🌍 Region: {ip_info['region']}\n"
-            message += f"🗺️ Country: {ip_info['country']}\n"
+            message += f"🏙️ Region: {ip_info['region']}\n"
+            message += f"🌍 Country: {ip_info['country']}\n"
             message += f"🌞 Latitude: {lat}\n"
             message += f"🌜 Longitude: {long}"
             message += f"\n\n🌐 View on <a href='{maps_url}'>Google Maps</a>"
@@ -197,6 +200,93 @@ def handle_unshort_command(update, context):
         # Send the original URL back to the user
         context.bot.send_message(chat_id=update.message.chat_id,
                                  text=f"🌐 Here is the original URL:\n\n {url}")
+    except ValueError as e:
+        logger.error(str(e))
+        context.bot.send_message(chat_id=update.message.chat_id,
+                                 text=str(e))
+    except Exception as e:
+        logger.error(str(e))
+        context.bot.send_message(chat_id=update.message.chat_id,
+                                 text="Sorry, an error occurred while processing your request.")
+
+
+def get_country_flag(country_code):
+    OFFSET = 127397
+    codepoints = tuple(ord(char) + OFFSET for char in country_code.upper())
+    return chr(codepoints[0]) + chr(codepoints[1])
+
+
+def handle_whois_command(update, context):
+    try:
+        # get first parameter
+        if len(context.args) == 0:
+            raise ValueError(
+                "Please provide a domain name or IP address. Send me the domain name or IP address you want to look up in the format: /whois <domain or IP>")
+
+        # get domain name from args
+        domain_name = context.args[0]
+
+        # get whois information
+        whois_info = print_whois(domain_name)
+
+        print(whois_info)
+
+        # check if the field is a list of datetime objects
+        def list_or_str(dt):
+            if isinstance(dt, list):
+                return ', '.join(str(d) for d in dt)
+            else:
+                return str(dt)
+
+        # check if whois info is empty
+        if 'registrar' in whois_info and (whois_info['registrar']) is None:
+            response_message = f"❌ Sorry, the domain name '{domain_name}' does not seem to be valid. Please enter a valid domain name."
+        else:
+            # format response message with whois info
+            response_message = "🔍 Here's some information about the domain you requested:\n\n"
+
+        # format response message
+        if 'domain_id' in whois_info and whois_info['domain_id']:
+            response_message += f"🌐 Domain ID: {whois_info['domain_id']}\n"
+        if 'domain_name' in whois_info and whois_info['domain_name']:
+            response_message += f"🌐 Domain Name: {list_or_str(whois_info['domain_name'])}\n"
+        if 'registrar' in whois_info and whois_info['registrar']:
+            response_message += f"🔍 Registrar: {whois_info['registrar']}\n"
+        if 'org' in whois_info and whois_info['org']:
+            response_message += f"🏢 Organization: {whois_info['org']}\n"
+        if 'state' in whois_info and whois_info['state']:
+            response_message += f"🏙️ State: {whois_info['state']}\n"
+        if 'country' in whois_info and whois_info['country']:
+            response_message += f"🌍 Country: {whois_info['country']} {get_country_flag(whois_info['country'])}\n"
+        if 'emails' in whois_info and whois_info['emails']:
+            response_message += f"📧 Emails: {list_or_str(whois_info['emails'])}\n"
+        if 'registrar_city' in whois_info and whois_info['registrar_city']:
+            response_message += f"🏙️ Registrar city: {whois_info['registrar_city']}\n"
+        if 'registrar_postal_code' in whois_info and whois_info['registrar_postal_code']:
+            response_message += f"📮 Registrar postal code: {whois_info['registrar_postal_code']}\n"
+        if 'registrar_country' in whois_info and whois_info['registrar_country']:
+            response_message += f"🌍 Registrar country: {whois_info['registrar_country']} {get_country_flag(whois_info['registrar_country'])}\n"
+        if 'registrar_phone' in whois_info and whois_info['registrar_phone']:
+            response_message += f"📞 Registrar phone: {whois_info['registrar_phone']}\n"
+        if 'registrar_email' in whois_info and whois_info['registrar_email']:
+            response_message += f"📧 Registrar email: {whois_info['registrar_email']}\n"
+        if 'status' in whois_info and whois_info['status']:
+            response_message += f"📈 Status: {list_or_str(whois_info['status'])}\n"
+        if 'creation_date' in whois_info and whois_info['creation_date']:
+            response_message += f"🕒 Creation date: {list_or_str(whois_info['creation_date'])}\n"
+        if 'updated_date' in whois_info and whois_info['updated_date']:
+            response_message += f"🕒 Updated date: {list_or_str(whois_info['updated_date'])}\n"
+        if 'expiration_date' in whois_info and whois_info['expiration_date']:
+            response_message += f"🕒 Expiration date: {list_or_str(whois_info['expiration_date'])}\n"
+        if 'name_servers' in whois_info and whois_info['name_servers']:
+            response_message += f"🔧 Name servers: {list_or_str(whois_info['name_servers'])}\n"
+        if 'dnssec' in whois_info and whois_info['dnssec']:
+            response_message += f"🔒 DNSSEC: {whois_info['dnssec']}\n"
+
+        # send message
+        context.bot.send_message(chat_id=update.message.chat_id,
+                                 text=response_message, parse_mode=ParseMode.HTML)
+
     except ValueError as e:
         logger.error(str(e))
         context.bot.send_message(chat_id=update.message.chat_id,

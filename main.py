@@ -5,7 +5,7 @@ from telegram.ext import CommandHandler, Updater
 import logging
 import datetime
 from bot import handle_start_command, handle_profile_command, handle_password_command, \
-    handle_help_command, handle_server_command, handle_unshort_command
+    handle_help_command, handle_server_command, handle_unshort_command, handle_whois_command
 
 # Load environment variables from .env file
 load_dotenv()
@@ -24,23 +24,25 @@ log_file_path = os.getenv('LOG_FILE_PATH')
 #     ]
 # )
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
+logging.basicConfig(
+    level=logging.ERROR,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.handlers.RotatingFileHandler(
+            filename=log_file_path,
+            maxBytes=10*1024*1024,
+            backupCount=5
+        ),
+        logging.StreamHandler()
+    ]
+)
 
-# Configure logging to a file
-handler = RotatingFileHandler(log_file_path, maxBytes=10000000, backupCount=5)
-handler.setLevel(logging.ERROR)
-handler.setFormatter(logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-
-logger.addHandler(handler)
-
-# Configure logging to the console
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
-
-logger.addHandler(console_handler)
+# # Example usage error
+# try:
+#     # some code that might raise an exception
+#     raise ValueError('Invalid value')
+# except ValueError as e:
+#     logging.error(str(e))
 
 
 def main():
@@ -63,6 +65,8 @@ def main():
     bot.add_handler(CommandHandler('server', handle_server_command))
     # unshorten URL
     bot.add_handler(CommandHandler('unshort', handle_unshort_command))
+    # whois
+    bot.add_handler(CommandHandler('whois', handle_whois_command))
 
     # start bot
     updater.start_polling()
