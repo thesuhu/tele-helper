@@ -34,13 +34,13 @@ Below is a list of available commands that are grouped by category. Please use t
 | --- | --- | --- |
 | /start | Start the bot | To start the bot and get the available commands |
 | /profile | Get your user profile information | To get your user profile information |
-| /password | Generate a secure password | To generate a secure password, you can specify the length of the password by typing /password <length> |
+| /password | Generate a secure password | To generate a secure password, you can specify the length of the password by typing /password `<length>` |
 
 ### OSINT
 
 | Command | Description | How to |
 | --- | --- | --- |
-| /unshort | Unshorten a shortened URL | To unshorten a shortened URL, type /unshort <URL> |
+| /unshort | Unshorten a shortened URL | To unshorten a shortened URL, type /unshort `<URL>` |
 
 ### Admin
 
