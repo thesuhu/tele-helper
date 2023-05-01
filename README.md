@@ -12,7 +12,7 @@ pip install -r requirements.txt
 
 Rename file `.env-example` to `.env` and edit the file. Paste your [Telegram Bot](https://web.telegram.com) api key:
 
-```
+```text
 TELEGRAM_BOT_API_KEY=
 ```
 
@@ -33,6 +33,7 @@ Below is a list of available commands that are grouped by category. Please use t
 | Command | Description | How to |
 | --- | --- | --- |
 | /start | Start the bot | To start the bot and get the available commands |
+| /help | Show list of available commands and their usage instructions | To show the list of available commands and their usage instructions |
 | /profile | Get your user profile information | To get your user profile information |
 | /password | Generate a secure password | To generate a secure password, you can specify the length of the password by typing /password `<length>` |
 
@@ -47,4 +48,3 @@ Below is a list of available commands that are grouped by category. Please use t
 | Command | Description | How to |
 | --- | --- | --- |
 | /server | Get server information (admin only) | To get server information (admin only) |
-
