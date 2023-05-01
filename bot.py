@@ -42,24 +42,34 @@ To get started, simply type /help to see what *Helper Bot* can do for you\.
 def handle_help_command(update, context):
     try:
         help_message = """
-ℹ️ *Available commands:*
+📋 *Commands*
+
+Below is a list of available commands that are grouped by category\. Please use the appropriate command for your needs\.
+
+🌟 *General*
+
 /start \- Start the bot
 /profile \- Get your user profile information
 /password \- Generate a secure password
-/server \- Get server information \(admin only\)
+
+🔍 *OSINT*
+
 /unshort \- Unshorten a shortened URL
 
-ℹ️ *How to use:*
-/start \- To start the bot and get the available commands
-/profile \- To get your user profile information
-/password \- To generate a secure password, you can specify the length of the password by typing /password \<length\>
-/server \- To get server information \(admin only\)
-/unshort \- To unshorten a shortened URL, type /unshort \<URL\>
+👑 *Admin*
+
+/server \- Get server information \(admin only\)
+
+📝 *How to use*
+
+To view the full usage instructions, please click on this link to access the [README](https://github\.com/thesuhu/tele-helper/blob/master/README\.md)\.
 
 Note: Some commands may not be available depending on your access level\.
         """
-        context.bot.send_message(chat_id=update.message.chat_id,
-                                 text=help_message, parse_mode=ParseMode.MARKDOWN_V2)
+
+        context.bot.send_message(chat_id=update.message.chat_id, text=help_message,
+                                 parse_mode=ParseMode.MARKDOWN_V2, disable_web_page_preview=True)
+
     except Exception as e:
         error_message = "An error occurred while handling /help command"
         logger.exception(error_message)
