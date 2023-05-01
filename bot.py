@@ -1,7 +1,6 @@
 import logging
 import os
 from dotenv import load_dotenv
-import emoji
 import requests
 from telegram import ParseMode
 
