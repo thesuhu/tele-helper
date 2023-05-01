@@ -6,6 +6,7 @@ from telegram import ParseMode
 
 from scripts.myip import what_my_ip
 from scripts.password import password_generator
+from scripts.unshorten import unshorten_url
 
 # create logger
 # agar log yang ditulis ke bot.log memiliki nama logger yang sesuai dengan nama module/filename yang sedang dijalankan
@@ -18,8 +19,10 @@ load_dotenv()
 authorized_users_str = os.getenv('INIT_AUTHORIZED_USERS')
 authorized_users_list = authorized_users_str.split(',')
 
+
 def get_authorized_users_list():
     return authorized_users_list
+
 
 def handle_start_command(update, context):
     try:
@@ -44,12 +47,14 @@ def handle_help_command(update, context):
 /profile \- Get your user profile information
 /password \- Generate a secure password
 /server \- Get server information \(admin only\)
+/unshort \- Unshorten a shortened URL
 
 ℹ️ *How to use:*
 /start \- To start the bot and get the available commands
 /profile \- To get your user profile information
 /password \- To generate a secure password, you can specify the length of the password by typing /password \<length\>
 /server \- To get server information \(admin only\)
+/unshort \- To unshorten a shortened URL, type /unshort \<URL\>
 
 Note: Some commands may not be available depending on your access level\.
         """
@@ -67,8 +72,8 @@ def handle_server_command(update, context):
         # validasi pengguna
         authorized_users_list = get_authorized_users_list()
         if str(update.message.chat_id) not in authorized_users_list:
-                context.bot.send_message(chat_id=update.message.chat_id,
-                                        text="⚠️ Sorry, only authorized users are allowed to use this command.")
+            context.bot.send_message(chat_id=update.message.chat_id,
+                                     text="⚠️ Sorry, only authorized users are allowed to use this command.")
         else:
             # mendapatkan ip server
             ip_info = what_my_ip()
@@ -88,7 +93,7 @@ def handle_server_command(update, context):
 
             # update.message.reply_html(message)
             context.bot.send_message(chat_id=update.message.chat_id,
-                                    text=message, parse_mode=ParseMode.HTML)
+                                     text=message, parse_mode=ParseMode.HTML)
     except Exception as e:
         logger.exception("Error handling /server command")
         context.bot.send_message(chat_id=update.message.chat_id,
@@ -143,9 +148,9 @@ def handle_password_command(update, context):
         if len(context.args) > 0:
             length = int(context.args[0])
             # memvalidasi panjang password
-            if length < 12 or length > 256:
+            if length < 12 or length > 50:
                 raise ValueError(
-                    "Password length should be an integer between 12 and 256.")
+                    "Invalid password length. Password length should be an integer between 12 and 50.")
         else:
             length = 12
 
@@ -153,8 +158,8 @@ def handle_password_command(update, context):
         password = password_generator(length)
 
         # send the generated password to the user
-        message += "🔒 Please make sure to use a unique and secure password\."
-        message = "Here's your new password:\n\n"
+        message = "🔒 Please make sure to use a unique and secure password. "
+        message += "Here's your new password:\n\n"
         message += f"{password}"
         context.bot.send_message(
             chat_id=update.message.chat_id, text=message, disable_web_page_preview=True)
@@ -162,8 +167,30 @@ def handle_password_command(update, context):
     except ValueError as e:
         logger.error(str(e))
         context.bot.send_message(chat_id=update.message.chat_id,
-                                 text="Invalid password length. Password length should be an integer between 12 and 256.")
+                                 text=str(e))
+    except Exception as e:
+        logger.error(str(e))
+        context.bot.send_message(chat_id=update.message.chat_id,
+                                 text="Sorry, an error occurred while processing your request.")
 
+
+def handle_unshort_command(update, context):
+    try:
+        # get first parameter
+        if len(context.args) == 0:
+            raise ValueError(
+                "Please provide a URL to unshorten. Send me the URL you want to unshorten in the format: /unshorten <URL>")
+
+         # Get the original URL
+        url = unshorten_url(context.args[0])
+
+        # Send the original URL back to the user
+        context.bot.send_message(chat_id=update.message.chat_id,
+                                 text=f"🌐 Here is the original URL:\n\n {url}")
+    except ValueError as e:
+        logger.error(str(e))
+        context.bot.send_message(chat_id=update.message.chat_id,
+                                 text=str(e))
     except Exception as e:
         logger.error(str(e))
         context.bot.send_message(chat_id=update.message.chat_id,

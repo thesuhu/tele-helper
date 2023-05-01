@@ -1,9 +1,11 @@
+from logging.handlers import RotatingFileHandler
 import os
 from dotenv import load_dotenv
 from telegram.ext import CommandHandler, Updater
 import logging
 import datetime
-from bot import handle_start_command, handle_profile_command, handle_password_command, handle_help_command, handle_server_command
+from bot import handle_start_command, handle_profile_command, handle_password_command, \
+    handle_help_command, handle_server_command, handle_unshort_command
 
 # Load environment variables from .env file
 load_dotenv()
@@ -12,15 +14,33 @@ load_dotenv()
 # Read the LOG_FILE_PATH value from the .env file
 log_file_path = os.getenv('LOG_FILE_PATH')
 
-# Configure logging
-logging.basicConfig(
-    level=logging.ERROR,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(log_file_path),
-        # logging.StreamHandler()
-    ]
-)
+# # Configure logging
+# logging.basicConfig(
+#     level=logging.ERROR,
+#     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+#     handlers=[
+#         logging.FileHandler(log_file_path),
+#         logging.StreamHandler() # stream error message to console
+#     ]
+# )
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
+# Configure logging to a file
+handler = RotatingFileHandler(log_file_path, maxBytes=10000000, backupCount=5)
+handler.setLevel(logging.ERROR)
+handler.setFormatter(logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
+logger.addHandler(handler)
+
+# Configure logging to the console
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
+
+logger.addHandler(console_handler)
 
 
 def main():
@@ -41,7 +61,8 @@ def main():
     bot.add_handler(CommandHandler('password', handle_password_command))
     # info server
     bot.add_handler(CommandHandler('server', handle_server_command))
-
+    # unshorten URL
+    bot.add_handler(CommandHandler('unshort', handle_unshort_command))
 
     # start bot
     updater.start_polling()
