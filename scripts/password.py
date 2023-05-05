@@ -11,6 +11,10 @@ def password_generator(panjang=12):
 
   # Acak karakter dan gabungkan menjadi password
   password = "".join(random.choice(karakter) for i in range(panjang))
+  
+  # Sanitasi karakter jika karakter terakhir adalah \
+  if password[-1] == "\\":
+      password = password[:-1] + "%"
 
   # Kembalikan password
   return password

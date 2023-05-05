@@ -1,11 +1,11 @@
-from logging.handlers import RotatingFileHandler
 import os
 from dotenv import load_dotenv
 from telegram.ext import CommandHandler, Updater
 import logging
 import datetime
 from bot import handle_start_command, handle_profile_command, handle_password_command, \
-    handle_help_command, handle_server_command, handle_unshort_command, handle_whois_command
+    handle_help_command, handle_server_command, handle_unshort_command, handle_whois_command, \
+    handle_wa_command, handle_lookup_command, handle_email_command
 
 # Load environment variables from .env file
 load_dotenv()
@@ -67,6 +67,12 @@ def main():
     bot.add_handler(CommandHandler('unshort', handle_unshort_command))
     # whois
     bot.add_handler(CommandHandler('whois', handle_whois_command))
+    # wa
+    bot.add_handler(CommandHandler('wa', handle_wa_command))
+    # lookup
+    bot.add_handler(CommandHandler('lookup', handle_lookup_command))
+    # email
+    bot.add_handler(CommandHandler('email', handle_email_command))
 
     # start bot
     updater.start_polling()
