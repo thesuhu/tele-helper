@@ -321,7 +321,7 @@ def handle_wa_command(update, context):
     try:
         # Check if phone number parameter is provided
         if len(context.args) == 0:
-            raise ValueError("Please provide a phone number. Send me the phone number you want to look up in the format: /wa <phone number>")
+            raise ValueError("Please provide a phone number. Send me the phone number you want to send message in the format: /wa <phone number>")
 
         # Get phone number from the arguments
         phone_number = context.args[0]
