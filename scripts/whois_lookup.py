@@ -26,7 +26,7 @@ def ip_lookup(ip_address):
     result = ipwhois.lookup_rdap()
 
     # tampilkan hasil lookup
-    print(json.dumps(result, indent=4))
+    # print(json.dumps(result, indent=4))
     return json.dumps(result, indent=4)
 
 # python -c "from scripts.whois_lookup import ip_lookup; print(ip_lookup('8.8.8.8'))"

@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import re
@@ -249,7 +250,7 @@ def handle_whois_command(update, context):
             # get whois information
             whois_info = print_whois(domain_name)
 
-            print(whois_info)
+            # print(whois_info)
 
             # # check if the field is a list of datetime objects
             # def list_or_str(dt):
@@ -321,7 +322,8 @@ def handle_wa_command(update, context):
     try:
         # Check if phone number parameter is provided
         if len(context.args) == 0:
-            raise ValueError("Please provide a phone number. Send me the phone number you want to send message in the format: /wa <phone number>")
+            raise ValueError(
+                "Please provide a phone number. Send me the phone number you want to send message in the format: /wa <phone number>")
 
         # Get phone number from the arguments
         phone_number = context.args[0]
@@ -340,9 +342,11 @@ def handle_wa_command(update, context):
         # Create the WhatsApp message URL
         wa_url = f"https://wa.me/{phone_number}"
         button_text = "Send WhatsApp Message"
-        reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton(button_text, url=wa_url)]])
+        reply_markup = InlineKeyboardMarkup(
+            [[InlineKeyboardButton(button_text, url=wa_url)]])
         message = f"📱 Please click the following button to send a message to {phone_number} on WhatsApp:"
-        context.bot.send_message(chat_id=update.message.chat_id, text=message, reply_markup=reply_markup)
+        context.bot.send_message(
+            chat_id=update.message.chat_id, text=message, reply_markup=reply_markup)
 
     except ValueError as e:
         logger.error(str(e))
@@ -371,7 +375,10 @@ def handle_lookup_command(update, context):
             ip_address = context.args[0]
 
             # get IP location information
-            ip_info = ip_lookup(ip_address)
+            ip_infoStr = ip_lookup(ip_address)
+            ip_info = json.loads(ip_infoStr)
+
+            # print(ip_info)
 
             # # check if the field is a list of values
             # def list_or_str(lst):
@@ -390,6 +397,8 @@ def handle_lookup_command(update, context):
             # format response message
             if 'ip_address' in ip_info and ip_info['ip_address']:
                 response_message += f"🌐 IP Address: {ip_info['ip_address']}\n"
+            if 'query' in ip_info and ip_info['query']:
+                response_message += f"🌐 IP Address: {ip_info['query']}\n"                
             if 'hostname' in ip_info and ip_info['hostname']:
                 response_message += f"🔍 Hostname: {ip_info['hostname']}\n"
             if 'city' in ip_info and ip_info['city']:
@@ -404,10 +413,22 @@ def handle_lookup_command(update, context):
                 response_message += f"📮 Postal Code: {ip_info['postal_code']}\n"
             if 'timezone' in ip_info and ip_info['timezone']:
                 response_message += f"🕒 Timezone: {ip_info['timezone']}\n"
+            if 'asn_registry' in ip_info and ip_info['asn_registry']:
+                response_message += f"🌐 ASN Registry: {ip_info['asn_registry']}\n"                
             if 'asn' in ip_info and ip_info['asn']:
                 response_message += f"🛡️ ASN: {ip_info['asn']}\n"
+            if 'asn_cidr' in ip_info and ip_info['asn_cidr']:
+                response_message += f"🌐 ASN CIDR: {ip_info['asn_cidr']}\n"                
+            if 'asn_country_code' in ip_info and ip_info['asn_country_code']:
+                response_message += f"🌍 ASN Country Code: {ip_info['asn_country_code']} {get_country_flag(ip_info['asn_country_code'])}\n"
             if 'asn_org' in ip_info and ip_info['asn_org']:
                 response_message += f"🏢 ASN Organization: {ip_info['asn_org']}\n"
+            if 'asn_description' in ip_info and ip_info['asn_description']:
+                response_message += f"🏢 ASN Description: {ip_info['asn_description']}\n"
+            if 'asn_date' in ip_info and ip_info['asn_date']:
+                response_message += f"🕒 ASN Date: {ip_info['asn_date']}\n"    
+            if 'entities' in ip_info and ip_info['entities']:
+                response_message += f"👥 Entities: {list_or_str(ip_info['entities'])}\n"                            
             if 'isp' in ip_info and ip_info['isp']:
                 response_message += f"📶 ISP: {ip_info['isp']}\n"
 
@@ -473,11 +494,11 @@ def handle_email_command(update, context):
                 message += f"📧 Can the SMTP Server Connect to the Email Address: {'Yes' if data['smtp_check'] else 'No'}\n"
                 message += f"📧 Does the Email Address Follow the RFC Standard: {'Yes' if data['regexp'] else 'No'}\n"
                 context.bot.send_message(chat_id=update.message.chat_id,
-                                            text=message, parse_mode=ParseMode.HTML)
+                                         text=message, parse_mode=ParseMode.HTML)
             elif 'errors' in result:
                 error_message = f"❌ Failed to verify email: {result['errors'][0]['details']}"
                 context.bot.send_message(chat_id=update.message.chat_id,
-                                            text=error_message, parse_mode=ParseMode.HTML)
+                                         text=error_message, parse_mode=ParseMode.HTML)
 
     except ValueError as e:
         logger.error(str(e))
